@@ -1,1 +1,335 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <iomanip>
+#include <limits>
 
+class BankAccount {
+private:
+    std::string accountNumber;
+    std::string accountHolderName;
+    double balance;
+
+public:
+    BankAccount() : accountNumber("0000"), accountHolderName("Unknown"), balance(0.0) {}
+
+    BankAccount(std::string accNum, std::string holderName, double initialBalance)
+        : accountNumber(accNum), accountHolderName(holderName) {
+        balance = (initialBalance >= 0.0) ? initialBalance : 0.0;
+    }
+
+    std::string getAccountNumber() const {
+        return accountNumber;
+    }
+
+    std::string getAccountHolderName() const {
+        return accountHolderName;
+    }
+
+    double getBalance() const {
+        return balance;
+    }
+
+    void setAccountHolderName(const std::string& newName) {
+        if (!newName.empty()) {
+            accountHolderName = newName;
+        }
+   bool deposit(double amount) {
+        if (amount > 0) {
+            balance += amount;
+            return true;
+        }
+        return false;
+    }
+
+    bool withdraw(double amount) {
+        if (amount > 0 && amount <= balance) {
+            balance -= amount;
+            return true;
+        }
+        return false;
+    }
+};
+
+void clearInputStream() {
+    std::cin.clear();
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+}
+
+int getValidatedInt(const std::string& prompt) {
+    int value;
+    while (true) {
+        std::cout << prompt;
+        if (std::cin >> value) {
+            clearInputStream();
+            return value;
+        }
+        std::cout << "Invalid input. Please enter a whole number.\n";
+        clearInputStream();
+    }
+}
+
+double getValidatedDouble(const std::string& prompt) {
+    double value;
+    while (true) {
+        std::cout << prompt;
+        if (std::cin >> value && value >= 0) {
+            clearInputStream();
+            return value;
+        }
+        std::cout << "Invalid input. Please enter a valid non-negative number.\n";
+        clearInputStream();
+    }
+}
+
+std::string getValidatedString(const std::string& prompt) {
+    std::string input;
+    while (true) {
+        std::cout << prompt;
+        std::getline(std::cin, input);
+        if (!input.empty()) {
+            return input;
+        }
+        std::cout << "Input cannot be empty. Please try again.\n";
+    }
+}
+
+int findAccountIndex(const std::vector<BankAccount>& accounts, const std::string& accNum) {
+    for (size_t i = 0; i < accounts.size(); ++i) {
+        if (accounts[i].getAccountNumber() == accNum) {
+            return static_cast<int>(i);
+        }
+    }
+    return -1;
+}
+
+void displayMenu() {
+    std::cout << "\n--- Bank Account Management System ---\n"
+              << "1. Create New Account\n"
+              << "2. Deposit Funds\n"
+              << "3. Withdraw Funds\n"
+              << "4. Update Account Holder Name\n"
+              << "5. Display All Accounts\n"
+              << "6. Exit\n";
+}
+
+int main() {
+    std::vector<BankAccount> accounts;
+    int choice = 0;
+
+    std::cout << std::fixed << std::setprecision(2);
+
+    while (choice != 6) {
+        displayMenu();
+        choice = getValidatedInt("Enter your choice (1-6): ");
+
+        switch (choice) {
+            case 1: {
+                std::string accNum = getValidatedString("Enter Account Number: ");
+                if (findAccountIndex(accounts, accNum) != -1) {
+                    std::cout << "Error: An account with this number already exists.\n";
+                    break;
+                }
+                std::string name = getValidatedString("Enter Account Holder Name: ");
+                double initialDeposit = getValidatedDouble("Enter Initial Balance: $");
+
+                accounts.emplace_back(accNum, name, initialDeposit);
+                std::cout << "Account created successfully.\n";
+                break;
+            }
+            case 2: {
+                std::string accNum = getValidatedString("Enter Account Number: ");
+                int idx = findAccountIndex(accounts, accNum);
+                if (idx == -1) {
+                    std::cout << "Account not found.\n";
+                    break;
+                }
+                double amount = getValidatedDouble("Enter deposit amount: $");
+                if (accounts[idx].deposit(amount)) {
+                    std::cout << "Deposit successful. New balance: $" << accounts[idx].getBalance() << "\n";
+                } else {
+                    std::cout << "Deposit failed. Amount must be greater than $0.00.\n";
+                }
+                break;
+            }
+            case 3: {
+                std::string accNum = getValidatedString("Enter Account Number: ");
+                int idx = findAccountIndex(accounts, accNum);
+                if (idx == -1) {
+                    std::cout << "Account not found.\n";
+                    break;
+                }
+                double amount = getValidatedDouble("Enter withdrawal amount: $");
+                if (accounts[idx].withdraw(amount)) {
+                    std::cout << "Withdrawal successful. New balance: $" << accounts[idx].getBalance() << "\n";
+                } else {
+                    std::cout << "Withdrawal failed. Insufficient funds or invalid amount.\n";
+                }
+                break;
+            }
+            case 4: {
+                std::string accNum = getValidatedString("Enter Account Number: ");
+                int idx = findAccountIndex(accounts, accNum);
+                if (idx == -1) {
+                    std::cout << "Account not found.\n";
+                    break;
+                }
+                std::string newName = getValidatedString("Enter new Account Holder Name: ");
+                accounts[idx].setAccountHolderName(newName);
+                std::cout << "Account holder name updated successfully.\n";
+                break;
+            }
+            case 5: {
+                if (accounts.empty()) {
+                    std::cout << "No accounts found in the system.\n";
+                    break;
+                }
+                std::cout << "\n--- Account Directory ---\n";
+                for (const auto& acc : accounts) {
+                    std::cout << "Account #: " << acc.getAccountNumber()
+                              << " | Holder: " << acc.getAccountHolderName()
+                              << " | Balance: $" << acc.getBalance() << "\n";
+                }
+                break;
+            }
+            case 6:
+                std::cout << "Exiting program. Goodbye!\n";
+                break;
+            default:
+                std::cout << "Invalid choice. Please select an option between 1 and 6.\n";
+        }
+    }
+
+    return 0;
+}
+
+A C++ class for representing a book in a library system.
+
+## Data Dictionary
+
+| Attribute     | Data Type     | Description                    |
+|---------------|---------------|--------------------------------|
+| `title`       | `std::string` | The book's title.              |
+| `author`      | `std::string` | The book's author.             |
+| `isbn`        | `std::string` | Unique ISBN identifier.        |
+| `isAvailable` | `bool`        | If the book is available.      |
+
+## Methods List
+
+| Method Signature             | Return Type   | Description               |
+|------------------------------|---------------|---------------------------|
+| `Book()`                     | (Constructor) | Default constructor.      |
+| `Book(title, author, isbn)`  | (Constructor) | Parameterized constructor.|
+| `getTitle() const`           | `std::string` | Gets the book's title.    |
+| `getAuthor() const`          | `std::string` | Gets the book's author.   |
+| `isAvailable() const`        | `bool`        | Checks if available.      |
+| `checkOut()`                 | `void`        | Checks out the book.      |
+| `returnBook()`               | `void`        | Returns the book.         |
+
+#include <cstring>
+#include <iomanip>
+#include <iostream>
+#include <string>
+
+class BankAccount {
+private:
+    int accountNumber;
+    char* holderName;
+    double balance;
+
+    static char* copyString(const char* src) {
+        if (!src) {
+            src = "";
+        }
+        std::size_t len = std::strlen(src);
+        char* dest = new char[len + 1];
+        std::memcpy(dest, src, len + 1);
+        return dest;
+    }
+
+public:
+    BankAccount(int accNum = 0, const char* name = "", double initialBalance = 0.0)
+        : accountNumber(accNum),
+          holderName(copyString(name)),
+          balance(initialBalance >= 0.0 ? initialBalance : 0.0) {}
+
+    BankAccount(const BankAccount& other)
+        : accountNumber(other.accountNumber),
+          holderName(copyString(other.holderName)),
+          balance(other.balance) {}
+
+    BankAccount& operator=(const BankAccount& other) {
+        if (this == &other) {
+            return *this;
+        }
+
+        char* newName = copyString(other.holderName);
+        delete[] holderName;
+
+        holderName = newName;
+        accountNumber = other.accountNumber;
+        balance = other.balance;
+        return *this;
+    }
+
+   ~BankAccount() {
+        delete[] holderName;
+    }
+
+       BankAccount& operator+=(double amount) {
+        if (amount > 0.0) {
+            balance += amount;
+        } else {
+            std::cerr << "Error: Deposit amount must be positive.\n";
+        }
+        return *this;
+    }
+
+    BankAccount& operator-=(double amount) {
+        if (amount <= 0.0) {
+            std::cerr << "Error: Withdrawal amount must be positive.\n";
+        } else if (amount > balance) {
+            std::cerr << "Error: Insufficient funds.\n";
+        } else {
+            balance -= amount;
+        }
+        return *this;
+    }
+
+        bool operator==(const BankAccount& other) const {
+        return accountNumber == other.accountNumber;
+    }
+
+    bool operator<(const BankAccount& other) const {
+        return balance < other.balance;
+    }
+
+    bool operator>(const BankAccount& other) const {
+        return balance > other.balance;
+    }
+
+        static void printAccount(const BankAccount& account) {
+        std::cout << "Account Number: " << account.accountNumber << "\n"
+                  << "Holder Name:    " << account.holderName << "\n"
+                  << "Balance:        $" << std::fixed << std::setprecision(2)
+                  << account.balance << "\n";
+    }
+
+    static BankAccount createAccountFromInput() {
+        int accNum = 0;
+        std::string name;
+        double initialBalance = 0.0;
+
+        std::cout << "Enter account number: ";
+        std::cin >> accNum;
+
+        std::cout << "Enter holder name: ";
+        std::cin.ignore();
+        std::getline(std::cin, name);
+
+        std::cout << "Enter initial balance: ";
+        std::cin >> initialBalance;
+
+        return BankAccount(accNum, name.c_str(), initialBalance);
+    }
+};
